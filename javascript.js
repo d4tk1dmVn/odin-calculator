@@ -33,25 +33,32 @@ const divide = (a, b) => {
   return Nan;
 };
 
-const parse = (input) => {
-  return [];
+const shuntingYard = (array) => {
+  return array;
 };
 
-// const toArray = (string) => {
-//   let result = [];
-//   let number = "";
-//   for(let i = 0; i < string.length; i++){
-//     if(string.charAt(i))
-//   }
-// };
+const toArray = (string) => {
+  let result = [];
+  let number = "";
+  for(let i = 0; i < string.length; i++){
+    if("+/*-".includes(string.charAt(i))){
+      result.push(Number(number));
+      result.push(string.charAt(i));
+      number = "";
+    } else {
+      number += string.charAt(i);
+    }
+  }
+};
 
 const solve = (polish_notation) => {
-  return 42;
+  return polish_notation;
 };
 
 const evaluate = (input) => {
-  const parsed = parse(input);
-  return solve(parsed).toString();
+  const array = toArray(input);
+  const polish_notation = shuntingYard(array);
+  return solve(polish_notation).toString();
 };
 
 const print = (evt) => {
