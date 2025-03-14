@@ -1,0 +1,33 @@
+.container {
+  display: flex;
+  margin: 0 auto;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.display {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.buttons {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.numpad {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.row {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.oppad {
+  flex: 0 3 auto;
+  display: flex;
+  flex-flow: column nowrap;
+}
