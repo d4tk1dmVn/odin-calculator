@@ -34,7 +34,16 @@ const divide = (a, b) => {
 };
 
 const shuntingYard = (array) => {
-  return array;
+  // let stack = [];
+  // let result = [];
+  // for (let i = 0; i < array.length ; i++){
+  //   const entry = array[i];
+  //   if (typeof entry === "number"){
+  //     result.push(entry)
+  //   } else if ("+/*-".includes)
+  // }
+  // return result
+  return array
 };
 
 const toArray = (string) => {
@@ -49,6 +58,8 @@ const toArray = (string) => {
       number += string.charAt(i);
     }
   }
+  result.push(number);
+  return result;
 };
 
 const solve = (polish_notation) => {
