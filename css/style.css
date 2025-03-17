@@ -13,7 +13,14 @@
 
 .buttons {
   display: flex;
+  flex: 1 0 auto;
   flex-flow: row nowrap;
+}
+
+button {
+  height: 100px;
+  width: 100px;
+  text-align: center;
 }
 
 .numpad {
