@@ -4,9 +4,10 @@ display.textContent = "0";
 const divideByZeroError = "DON'T YOU DIVIDE BY ZERO";
 
 let state = {
-  message_shown: false,
-  decimal: false,
-  result_shown: true,
+  isMessageDisplayed: false,
+  isDecimalEnabled: false,
+  isResultDisplayed: true,
+  isAwaitingOperand: false,
   exec_stack: [undefined, undefined, undefined],
 };
 
@@ -76,8 +77,9 @@ const showResult = (result) => {
   state.exec_stack[0] = result;
   state.exec_stack[1] = undefined;
   state.exec_stack[2] = undefined;
-  state.result_shown = true;
-  state.decimal = false;
+  state.isResultDisplayed = true;
+  state.isDecimalEnabled = false;
+  state.isAwaitingOperand = false;
 };
 
 const isInt = (number) => {
@@ -86,22 +88,20 @@ const isInt = (number) => {
 
 const clear = () => {
   display.textContent = "0";
-  state.message_shown = false;
-  state.decimal = false;
-  state.result_shown = true;
+  state.isMessageDisplayed = false;
+  state.isDecimalEnabled = false;
+  state.isResultDisplayed = true;
+  state.isAwaitingOperand = false;
   state.exec_stack = [undefined, undefined, undefined];
 };
 
 const clearMessage = () => {
-  if (state.message_shown) {
+  if (state.isMessageDisplayed) {
     clear();
   }
 };
 
 const insertNumber = (number) => {
-  clearMessage();
-  // const number = evt.currentTarget.textContent;
-  if (state.result_shown) {
     // SHOW RESULT != EXPECTING PARTICULAR OPERAND
     // notice that typing after getting a result
     // DOESN'T CLEAR THE STACK, and therefore
@@ -110,7 +110,14 @@ const insertNumber = (number) => {
     // so it's pointless
     // therefore, we gotta differentiate SHOWING A RESULT
     // from EXPECTING A PARTICULAR INPUT
-    state.result_shown = false;
+  clearMessage();
+  if (state.isResultDisplayed) {
+    state.isResultDisplayed = false;
+    display.textContent = "" + number;
+    return;
+  }
+  if (state.isAwaitingOperand) {
+    state.isAwaitingOperand = false;
     display.textContent = "" + number;
     return;
   }
@@ -137,7 +144,7 @@ const divideByZero = () => {
 
 const showMessage = (str) => {
   clear();
-  state.message_shown = true;
+  state.isMessageDisplayed = true;
   display.textContent = str;
 };
 
@@ -151,7 +158,7 @@ const solve = () => {
 
 const reusingPreviousResult = () => {
   return (
-    state.result_shown &&
+    state.isResultDisplayed &&
     state.exec_stack[0] !== undefined &&
     state.exec_stack[2] === undefined
   );
@@ -159,22 +166,33 @@ const reusingPreviousResult = () => {
 
 const usingOperatorToSolve = () => {
   return (
-    !state.result_shown &&
+    // using the operator to solve a.k.a
+    // "chaining" operators means
+    // we want to get the second operand
+    // from what's currently on the display
+    // ergo, we are EXPECTING A SECOND OPERAND
+    // !state.isResultDisplayed &&
+    !state.isAwaitingOperand &&
     state.exec_stack[0] !== undefined &&
     state.exec_stack[1] !== undefined &&
     state.exec_stack[2] === undefined
+    // as always, check later if there is
+    // a better way to do this
   );
 };
 
 const insertOperation = (operator) => {
   clearMessage();
-  // const operator = evt.currentTarget.textContent;
   if (state.exec_stack[1] === undefined) {
-    state.result_shown = true;
-    state.decimal = false;
+    //CURRENT OPERATOR IS UNDETERMINED
+    // therefore here we are not displaying a
+    // result, we are EXPECTING FOR AN OPERAND
+    // state.isResultDisplayed = true;
+    state.isAwaitingOperand = true;
+    state.isDecimalEnabled = false;
     state.exec_stack[0] = sanitizedDisplay();
   } else if (reusingPreviousResult()) {
-    state.decimal = false;
+    state.isDecimalEnabled = false;
   } else if (usingOperatorToSolve()) {
     state.exec_stack[2] = sanitizedDisplay();
     solve();
@@ -183,29 +201,28 @@ const insertOperation = (operator) => {
   return;
 };
 
-// const numberButtons = document.querySelectorAll(".number");
-// numberButtons.forEach((button) => {
-//   button.addEventListener("click", insertNumber, false);
-// });
-//
-// const clearButton = document.querySelector(".clear");
-// clearButton.addEventListener("click", clear, false);
-//
-// const operationButtons = document.querySelectorAll(".operation");
-// operationButtons.forEach((button) => {
-//   button.addEventListener("click", insertOperation, false);
-// });
-
 const onlyFirstOperandDefined = () => {
   return (
+    // this is useful if we are pressing
+    // = after getting a result from another
+    // operation
+    // try later if there is another way
+    // of doing the same check
     state.exec_stack[0] !== undefined &&
     state.exec_stack[1] === undefined &&
     state.exec_stack[2] === undefined
   );
 };
 
-const firstOperandUndefined = () => {
-  return state.exec_stack[0] === undefined;
+const anyOperandUndefined = () => {
+  // useful for when we press =
+  // without defining anything at all
+  // or if we define first operand and operator
+  // but not the second operator and then we 
+  // press =
+  // this is a use of the expecting second operand boolean
+  // return (state.exec_stack[0] === undefined) || state.isResultDisplayed;
+  return (state.exec_stack[0] === undefined) || state.isAwaitingOperand;
 };
 
 const solveByEqual = () => {
@@ -213,7 +230,8 @@ const solveByEqual = () => {
   if (onlyFirstOperandDefined()) {
     state.exec_stack[1] = "+";
     state.exec_stack[2] = 0;
-  } else if (firstOperandUndefined() || state.result_shown) {
+    alert("this is the case!");
+  } else if (anyOperandUndefined()) {
     state.exec_stack = [sanitizedDisplay(), "+", 0];
   } else {
     state.exec_stack[2] = sanitizedDisplay();
@@ -221,35 +239,28 @@ const solveByEqual = () => {
   solve();
 };
 
-// const equalButton = document.querySelector(".operate");
-// equalButton.addEventListener("click", solveByEqual, false);
-
 const insertPeriod = () => {
   clearMessage();
-  // const period = evt.currentTarget.textContent;
-  if (!state.decimal) {
-    state.result_shown = false;
-    state.decimal = true;
+  // WE AREN'T CHECKING IF WE ARE WAITING FOR THE SECOND ARGUMENT
+  // thus making it possible to type an illegal . if we do something
+  // like . then + then . again
+  if (!state.isDecimalEnabled) {
+    state.isResultDisplayed = false; // this depends, it could be done
+    state.isDecimalEnabled = true;
     display.textContent += ".";
   }
   return;
 };
-
-// const period = document.querySelector(".period");
-// period.addEventListener("click", insertPeriod, false);
 
 const deleteOne = () => {
   if (display.textContent.length) {
     const to_delete = display.textContent.charAt(
       display.textContent.length - 1,
     );
-    state.decimal = to_delete === "." ? false : state.decimal;
+    state.isDecimalEnabled = to_delete === "." ? false : state.isDecimalEnabled;
     display.textContent = display.textContent.slice(0, -1);
   }
 };
-
-// const del = document.querySelector(".delete");
-// del.addEventListener("click", deleteOne, false);
 
 const calculator = document.querySelector(".calculator");
 calculator.addEventListener("click", (event) => {
