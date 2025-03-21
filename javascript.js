@@ -1,5 +1,8 @@
 const display = document.querySelector(".display");
 display.textContent = "0";
+
+const divideByZeroError = "DON'T YOU DIVIDE BY ZERO";
+
 let state = {
   message_shown: false,
   decimal: false,
@@ -83,6 +86,7 @@ const isInt = (number) => {
 
 const clear = () => {
   display.textContent = "0";
+  state.message_shown = false;
   state.decimal = false;
   state.result_shown = true;
   state.exec_stack = [undefined, undefined, undefined];
@@ -90,15 +94,22 @@ const clear = () => {
 
 const clearMessage = () => {
   if (state.message_shown) {
-    state.message_shown = false;
     clear();
   }
 };
 
-const insertNumber = (evt) => {
+const insertNumber = (number) => {
   clearMessage();
-  const number = evt.currentTarget.textContent;
+  // const number = evt.currentTarget.textContent;
   if (state.result_shown) {
+    // SHOW RESULT != EXPECTING PARTICULAR OPERAND
+    // notice that typing after getting a result
+    // DOESN'T CLEAR THE STACK, and therefore
+    // the "chain" doesn't stop when it should
+    // using clear() here get's rid of ALL THE STATE
+    // so it's pointless
+    // therefore, we gotta differentiate SHOWING A RESULT
+    // from EXPECTING A PARTICULAR INPUT
     state.result_shown = false;
     display.textContent = "" + number;
     return;
@@ -132,7 +143,7 @@ const showMessage = (str) => {
 
 const solve = () => {
   if (divideByZero()) {
-    showMessage("DON'T YOU DIVIDE BY ZERO");
+    showMessage(divideByZeroError);
     return;
   }
   showResult(operate());
@@ -155,9 +166,9 @@ const usingOperatorToSolve = () => {
   );
 };
 
-const insertOperation = (evt) => {
+const insertOperation = (operator) => {
   clearMessage();
-  const operator = evt.currentTarget.textContent;
+  // const operator = evt.currentTarget.textContent;
   if (state.exec_stack[1] === undefined) {
     state.result_shown = true;
     state.decimal = false;
@@ -172,18 +183,18 @@ const insertOperation = (evt) => {
   return;
 };
 
-const all_numbers = document.querySelectorAll(".number");
-all_numbers.forEach((button) => {
-  button.addEventListener("click", insertNumber, false);
-});
-
-const clear_button = document.querySelector(".clear");
-clear_button.addEventListener("click", clear, false);
-
-const all_operators = document.querySelectorAll(".operation");
-all_operators.forEach((button) => {
-  button.addEventListener("click", insertOperation, false);
-});
+// const numberButtons = document.querySelectorAll(".number");
+// numberButtons.forEach((button) => {
+//   button.addEventListener("click", insertNumber, false);
+// });
+//
+// const clearButton = document.querySelector(".clear");
+// clearButton.addEventListener("click", clear, false);
+//
+// const operationButtons = document.querySelectorAll(".operation");
+// operationButtons.forEach((button) => {
+//   button.addEventListener("click", insertOperation, false);
+// });
 
 const onlyFirstOperandDefined = () => {
   return (
@@ -202,7 +213,7 @@ const solveByEqual = () => {
   if (onlyFirstOperandDefined()) {
     state.exec_stack[1] = "+";
     state.exec_stack[2] = 0;
-  } else if (firstOperandUndefined()) {
+  } else if (firstOperandUndefined() || state.result_shown) {
     state.exec_stack = [sanitizedDisplay(), "+", 0];
   } else {
     state.exec_stack[2] = sanitizedDisplay();
@@ -210,30 +221,50 @@ const solveByEqual = () => {
   solve();
 };
 
-const operate_button = document.querySelector(".operate");
-operate_button.addEventListener("click", solveByEqual, false);
+// const equalButton = document.querySelector(".operate");
+// equalButton.addEventListener("click", solveByEqual, false);
 
-const insertPeriod = (evt) => {
+const insertPeriod = () => {
   clearMessage();
-  const period = evt.currentTarget.textContent;
+  // const period = evt.currentTarget.textContent;
   if (!state.decimal) {
     state.result_shown = false;
     state.decimal = true;
-    display.textContent += period;
+    display.textContent += ".";
   }
   return;
 };
 
-const period = document.querySelector(".period");
-period.addEventListener("click", insertPeriod, false);
+// const period = document.querySelector(".period");
+// period.addEventListener("click", insertPeriod, false);
 
 const deleteOne = () => {
-  if (display.textContent.length){
-    const to_delete = display.textContent.charAt(display.textContent.length-1);
+  if (display.textContent.length) {
+    const to_delete = display.textContent.charAt(
+      display.textContent.length - 1,
+    );
     state.decimal = to_delete === "." ? false : state.decimal;
     display.textContent = display.textContent.slice(0, -1);
   }
 };
 
-const del = document.querySelector(".delete");
-del.addEventListener("click", deleteOne, false);
+// const del = document.querySelector(".delete");
+// del.addEventListener("click", deleteOne, false);
+
+const calculator = document.querySelector(".calculator");
+calculator.addEventListener("click", (event) => {
+  const target = event.target;
+  if (target.classList.contains("number")) {
+    insertNumber(target.textContent);
+  } else if (target.classList.contains("operation")) {
+    insertOperation(target.textContent);
+  } else if (target.classList.contains("operate")) {
+    solveByEqual();
+  } else if (target.classList.contains("clear")) {
+    clear();
+  } else if (target.classList.contains("period")) {
+    insertPeriod();
+  } else if (target.classList.contains("delete")) {
+    deleteOne();
+  }
+});
