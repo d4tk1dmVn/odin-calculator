@@ -19,6 +19,8 @@
   flex-flow: column nowrap;
   justify-content: center;
   align-items: center;
+  border-color: #FFFFFF;
+  border-style: double;
 }
 
 .display {
@@ -30,7 +32,7 @@
   font-size: 40px;
   margin: 0 auto;
   height: 100px;
-  width: 400px;
+  width: 100%;
   background: #fbb905;
   font-family:Orbitron;
 }
