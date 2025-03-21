@@ -203,7 +203,7 @@ const solveByEqual = () => {
     state.exec_stack[1] = "+";
     state.exec_stack[2] = 0;
   } else if (firstOperandUndefined()) {
-    state.exec_stack = [0, "+", 0];
+    state.exec_stack = [sanitizedDisplay(), "+", 0];
   } else {
     state.exec_stack[2] = sanitizedDisplay();
   }
