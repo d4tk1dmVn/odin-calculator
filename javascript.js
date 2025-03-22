@@ -102,24 +102,14 @@ const clearMessage = () => {
 };
 
 const insertNumber = (number) => {
-    // SHOW RESULT != EXPECTING PARTICULAR OPERAND
-    // notice that typing after getting a result
-    // DOESN'T CLEAR THE STACK, and therefore
-    // the "chain" doesn't stop when it should
-    // using clear() here get's rid of ALL THE STATE
-    // so it's pointless
-    // therefore, we gotta differentiate SHOWING A RESULT
-    // from EXPECTING A PARTICULAR INPUT
   clearMessage();
   if (state.isResultDisplayed) {
     state.isResultDisplayed = false;
-    display.textContent = "" + number;
-    return;
+    display.textContent = "";
   }
   if (state.isAwaitingOperand) {
     state.isAwaitingOperand = false;
-    display.textContent = "" + number;
-    return;
+    display.textContent = "";
   }
   display.textContent += number;
   return;
@@ -166,12 +156,6 @@ const reusingPreviousResult = () => {
 
 const usingOperatorToSolve = () => {
   return (
-    // using the operator to solve a.k.a
-    // "chaining" operators means
-    // we want to get the second operand
-    // from what's currently on the display
-    // ergo, we are EXPECTING A SECOND OPERAND
-    // !state.isResultDisplayed &&
     !state.isAwaitingOperand &&
     state.exec_stack[0] !== undefined &&
     state.exec_stack[1] !== undefined &&
@@ -184,10 +168,6 @@ const usingOperatorToSolve = () => {
 const insertOperation = (operator) => {
   clearMessage();
   if (state.exec_stack[1] === undefined) {
-    //CURRENT OPERATOR IS UNDETERMINED
-    // therefore here we are not displaying a
-    // result, we are EXPECTING FOR AN OPERAND
-    // state.isResultDisplayed = true;
     state.isAwaitingOperand = true;
     state.isDecimalEnabled = false;
     state.exec_stack[0] = sanitizedDisplay();
@@ -203,9 +183,6 @@ const insertOperation = (operator) => {
 
 const onlyFirstOperandDefined = () => {
   return (
-    // this is useful if we are pressing
-    // = after getting a result from another
-    // operation
     // try later if there is another way
     // of doing the same check
     state.exec_stack[0] !== undefined &&
@@ -215,14 +192,7 @@ const onlyFirstOperandDefined = () => {
 };
 
 const anyOperandUndefined = () => {
-  // useful for when we press =
-  // without defining anything at all
-  // or if we define first operand and operator
-  // but not the second operator and then we 
-  // press =
-  // this is a use of the expecting second operand boolean
-  // return (state.exec_stack[0] === undefined) || state.isResultDisplayed;
-  return (state.exec_stack[0] === undefined) || state.isAwaitingOperand;
+  return state.exec_stack[0] === undefined || state.isAwaitingOperand;
 };
 
 const solveByEqual = () => {
@@ -230,7 +200,6 @@ const solveByEqual = () => {
   if (onlyFirstOperandDefined()) {
     state.exec_stack[1] = "+";
     state.exec_stack[2] = 0;
-    alert("this is the case!");
   } else if (anyOperandUndefined()) {
     state.exec_stack = [sanitizedDisplay(), "+", 0];
   } else {
@@ -241,15 +210,18 @@ const solveByEqual = () => {
 
 const insertPeriod = () => {
   clearMessage();
-  // WE AREN'T CHECKING IF WE ARE WAITING FOR THE SECOND ARGUMENT
-  // thus making it possible to type an illegal . if we do something
-  // like . then + then . again
   if (!state.isDecimalEnabled) {
-    state.isResultDisplayed = false; // this depends, it could be done
+    if (state.isResultDisplayed) {
+      state.isResultDisplayed = false;
+      display.textContent = "0";
+    }
+    if (state.isAwaitingOperand) {
+      state.isAwaitingOperand = false;
+      display.textContent = "0";
+    }
     state.isDecimalEnabled = true;
     display.textContent += ".";
   }
-  return;
 };
 
 const deleteOne = () => {
