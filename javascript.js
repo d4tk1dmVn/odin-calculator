@@ -8,7 +8,9 @@ let state = {
   isDecimalEnabled: false,
   isResultDisplayed: true,
   isAwaitingOperand: false,
-  exec_stack: [undefined, undefined, undefined],
+  firstOperand: null,
+  currentOperator: null,
+  secondOperand: null,
 };
 
 const checkInput = (input) => {
@@ -51,19 +53,19 @@ const rounded = (number) => {
 };
 
 const operate = () => {
-  let result = undefined;
-  switch (state.exec_stack[1]) {
+  let result = null;
+  switch (state.currentOperator) {
     case "*":
-      result = multiply(state.exec_stack[0], state.exec_stack[2]);
+      result = multiply(state.firstOperand, state.secondOperand);
       break;
     case "+":
-      result = add(state.exec_stack[0], state.exec_stack[2]);
+      result = add(state.firstOperand, state.secondOperand);
       break;
     case "-":
-      result = subtract(state.exec_stack[0], state.exec_stack[2]);
+      result = subtract(state.firstOperand, state.secondOperand);
       break;
     case "/":
-      result = divide(state.exec_stack[0], state.exec_stack[2]);
+      result = divide(state.firstOperand, state.secondOperand);
       break;
     default:
       result = NaN;
@@ -74,9 +76,9 @@ const operate = () => {
 
 const showResult = (result) => {
   display.textContent = result.toString();
-  state.exec_stack[0] = result;
-  state.exec_stack[1] = undefined;
-  state.exec_stack[2] = undefined;
+  state.firstOperand = result;
+  state.currentOperator = null;
+  state.secondOperand = null;
   state.isResultDisplayed = true;
   state.isDecimalEnabled = false;
   state.isAwaitingOperand = false;
@@ -92,7 +94,9 @@ const clear = () => {
   state.isDecimalEnabled = false;
   state.isResultDisplayed = true;
   state.isAwaitingOperand = false;
-  state.exec_stack = [undefined, undefined, undefined];
+  state.firstOperand = null;
+  state.currentOperator = null;
+  state.secondOperand = null;
 };
 
 const clearMessage = () => {
@@ -102,7 +106,6 @@ const clearMessage = () => {
 };
 
 const insertNumber = (number) => {
-  clearMessage();
   if (state.isResultDisplayed) {
     state.isResultDisplayed = false;
     display.textContent = "";
@@ -129,7 +132,7 @@ const sanitizedDisplay = () => {
 };
 
 const divideByZero = () => {
-  return state.exec_stack[1] === "/" && state.exec_stack[2] === 0;
+  return state.currentOperator === "/" && state.secondOperand === 0;
 };
 
 const showMessage = (str) => {
@@ -149,35 +152,34 @@ const solve = () => {
 const reusingPreviousResult = () => {
   return (
     state.isResultDisplayed &&
-    state.exec_stack[0] !== undefined &&
-    state.exec_stack[2] === undefined
+    state.firstOperand !== null &&
+    state.secondOperand === null
   );
 };
 
 const usingOperatorToSolve = () => {
   return (
     !state.isAwaitingOperand &&
-    state.exec_stack[0] !== undefined &&
-    state.exec_stack[1] !== undefined &&
-    state.exec_stack[2] === undefined
+    state.firstOperand !== null &&
+    state.currentOperator !== null &&
+    state.secondOperand === null
     // as always, check later if there is
     // a better way to do this
   );
 };
 
 const insertOperation = (operator) => {
-  clearMessage();
-  if (state.exec_stack[1] === undefined) {
+  if (state.currentOperator === null) {
     state.isAwaitingOperand = true;
     state.isDecimalEnabled = false;
-    state.exec_stack[0] = sanitizedDisplay();
+    state.firstOperand = sanitizedDisplay();
   } else if (reusingPreviousResult()) {
     state.isDecimalEnabled = false;
   } else if (usingOperatorToSolve()) {
-    state.exec_stack[2] = sanitizedDisplay();
+    state.secondOperand = sanitizedDisplay();
     solve();
   }
-  state.exec_stack[1] = operator;
+  state.currentOperator = operator;
   return;
 };
 
@@ -185,31 +187,31 @@ const onlyFirstOperandDefined = () => {
   return (
     // try later if there is another way
     // of doing the same check
-    state.exec_stack[0] !== undefined &&
-    state.exec_stack[1] === undefined &&
-    state.exec_stack[2] === undefined
+    state.firstOperand !== null &&
+    state.currentOperator === null &&
+    state.secondOperand === null
   );
 };
 
 const anyOperandUndefined = () => {
-  return state.exec_stack[0] === undefined || state.isAwaitingOperand;
+  return state.firstOperand === null || state.isAwaitingOperand;
 };
 
 const solveByEqual = () => {
-  clearMessage();
   if (onlyFirstOperandDefined()) {
-    state.exec_stack[1] = "+";
-    state.exec_stack[2] = 0;
+    state.firstOperand = "+";
+    state.secondOperand = 0;
   } else if (anyOperandUndefined()) {
-    state.exec_stack = [sanitizedDisplay(), "+", 0];
+    state.firstOperand = sanitizedDisplay();
+    state.currentOperator = "+";
+    state.secondOperand = 0;
   } else {
-    state.exec_stack[2] = sanitizedDisplay();
+    state.secondOperand = sanitizedDisplay();
   }
   solve();
 };
 
 const insertPeriod = () => {
-  clearMessage();
   if (!state.isDecimalEnabled) {
     if (state.isResultDisplayed) {
       state.isResultDisplayed = false;
@@ -236,6 +238,7 @@ const deleteOne = () => {
 
 const calculator = document.querySelector(".calculator");
 calculator.addEventListener("click", (event) => {
+  clearMessage();
   const target = event.target;
   if (target.classList.contains("number")) {
     insertNumber(target.textContent);
